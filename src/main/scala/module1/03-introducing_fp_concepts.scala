@@ -217,9 +217,6 @@ object opt {
 }
 
 object list {
-  def apply[A](v: A*): List[A] = {
-    if (v.isEmpty) Nil else ::(v.head, apply(v.tail: _*))
-  }
   /**
    *
    * Реализовать односвязанный иммутабельный список List
