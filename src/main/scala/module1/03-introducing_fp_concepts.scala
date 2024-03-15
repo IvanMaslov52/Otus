@@ -163,8 +163,9 @@ object opt {
       case None => None
     }
 
-    def printIfAny: Unit = this match {
+    def printIfAny(): Unit = this match {
       case Some(v) => println(v)
+      case None => ()
     }
 
     def zip[B](b: Option[B]): Option[(T, B)] = (this, b) match {
@@ -231,7 +232,7 @@ object list {
     def ::[A >: T](v: A): List[A] = List.::(v, this)
 
     def isEmpty: Boolean = this match {
-      case List.::(head, tail) => false
+      case _ => false
       case List.Nil => true
     }
 
@@ -242,12 +243,9 @@ object list {
     }
 
     def filter(f: T => Boolean): List[T] = this match {
-      case List.::(head: T, tail: List[T]) => if (f(head)) {
-        tail.filter(f)
-      } else {
-        List.::(head, tail.filter(f))
-      }
       case List.Nil => List.Nil
+      case List.::(head, tail) if f(head) => head :: tail.filter(f)
+      case List.::(_, tail) => tail.filter(f)
     }
 
     def map[A](f: T => A): List[A] = this match {
@@ -265,15 +263,13 @@ object list {
       loop(this, List.Nil)
     }
 
-    def incList: List[Int] = this match {
-      case List.::(head: Int, tail: List[Int]) => List.::(head + 1, tail.map(_ + 1))
-    }
+    def incList: List[Int] = this.map(_ + 1)
 
     def flatMap[A](f: T => List[A]): List[A] = this match {
       case List.Nil => List.Nil
       case List.::(head, tail) => f(head) match {
         case List.Nil => tail.flatMap(f)
-        case List.::(h, t) => List.::(h, tail.flatMap(f))
+        case List.::(head, _) => List.::(head, tail.flatMap(f))
       }
     }
 
