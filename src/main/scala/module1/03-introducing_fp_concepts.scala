@@ -1,6 +1,9 @@
 package module1
 
-import java.util.UUID
+import module1.list.List
+import module1.list.List.{::, Nil}
+import module1.opt.{None, Some}
+
 import scala.annotation.tailrec
 import java.time.Instant
 import scala.language.postfixOps
@@ -19,26 +22,24 @@ object recursion {
   def fact(n: Int): Int = {
     var _n = 1
     var i = 2
-    while (i <= n){
+    while (i <= n) {
       _n *= i
       i += 1
     }
     _n
   }
 
-  def factRec(n: Int): Int = if(n <= 0) 1 else n * factRec(n - 1)
+  def factRec(n: Int): Int = if (n <= 0) 1 else n * factRec(n - 1)
 
   def factTailRec(n: Int): Int = {
     @tailrec
     def loop(n: Int, acc: Int): Int = {
-      if(n <= 0) acc
+      if (n <= 0) acc
       else loop(n - 1, n * acc)
     }
+
     loop(n, 1)
   }
-
-
-
 
 
   /**
@@ -46,11 +47,21 @@ object recursion {
    * F0 = 0, F1 = 1, Fn = Fn-1 + Fn - 2
    *
    */
+  def fibonacci(n: Int): Int = {
+    @tailrec
+    def loop(a: Int, b: Int, n: Int): Int = n match {
+      case 0 => a
+      case _ => loop(b, a + b, n - 1)
+    }
+
+    if (n <= 1) n
+    else loop(0, 1, n)
+  }
 
 
 }
 
-object hof{
+object hof {
 
 
   // обертки
@@ -86,27 +97,8 @@ object hof{
 
   def partial[A, B, C](a: A, f: (A, B) => C): B => C = f.curried(a)
 
-  def sum(x: Int, y: Int): Int = x + y
 
-  val _: Int => Int => Int = sum _.curried
-  val p: Int => Int = (sum _.curried)(2)
-  p(3) // 5
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  trait Consumer{
+  trait Consumer {
     def subscribe(topic: String): Stream[Record]
   }
 
@@ -126,24 +118,19 @@ object hof{
   def createRequestSubscription() = ???
 
 
-
 }
 
 
-
-
-
-
 /**
- *  Реализуем тип Option
+ * Реализуем тип Option
  */
-
 
 
 object opt {
 
 
   class Animal
+
   class Dog extends Animal
 
   /**
@@ -156,7 +143,7 @@ object opt {
   // 3. contravariance A <- B Option[A] -> Option[B]
 
 
-  sealed trait Option[+T]{
+  sealed trait Option[+T] {
 
     def isEmpty: Boolean = this match {
       case Some(v) => false
@@ -176,28 +163,38 @@ object opt {
       case None => None
     }
 
+    def printIfAny(): Unit = this match {
+      case Some(v) => println(v)
+      case None => ()
+    }
+
+    def zip[B](b: Option[B]): Option[(T, B)] = (this, b) match {
+      case (Some(v1), Some(v2)) => Some((v1, v2))
+      case _ => None
+    }
+
+    def filter(f: T => Boolean): Option[T] = this match {
+      case Some(v) => if (f(v)) this else None
+      case None => None
+    }
+
+
   }
 
   case class Some[V](v: V) extends Option[V]
-  case object None extends Option[Nothing]   // Any <- Dog
+
+  case object None extends Option[Nothing] // Any <- Dog
 
   var o11: Option[Int] = None
 
-  object Option{
+  object Option {
     def apply[T](v: T): Option[T] =
-      if(v == null) None
+      if (v == null) None
       else Some(v)
   }
 
   val o1: Option[Int] = Option(1)
   o1.isEmpty // false
-
-
-
-
-
-
-
 
 
   /**
@@ -230,32 +227,80 @@ object list {
    */
 
 
-  sealed trait List[+T]{
+  sealed trait List[+T] {
+
+    def ::[A >: T](v: A): List[A] = List.::(v, this)
+
+    def isEmpty: Boolean = this match {
+      case _ => false
+      case List.Nil => true
+    }
+
+    def mkString(string: String): String = this match {
+      case List.::(head, List.Nil) => head + ""
+      case List.::(head, tail) => head + string + tail.mkString(string)
+      case List.Nil => ""
+    }
+
+    def filter(f: T => Boolean): List[T] = this match {
+      case List.Nil => List.Nil
+      case List.::(head, tail) if f(head) => head :: tail.filter(f)
+      case List.::(_, tail) => tail.filter(f)
+    }
+
+    def map[A](f: T => A): List[A] = this match {
+      case List.::(head: T, tail: List[T]) => List.::(f(head), tail.map(f))
+      case List.Nil => List.Nil
+    }
+
+    def reverse: List[T] = {
+      @tailrec
+      def loop(list: List[T], acc: List[T]): List[T] = list match {
+        case List.::(head, tail: List[T]) => loop(tail, head :: acc)
+        case List.Nil => acc
+      }
+
+      loop(this, List.Nil)
+    }
+
+    def incList: List[Int] = this.map(_ + 1)
+
+    def flatMap[A](f: T => List[A]): List[A] = this match {
+      case List.Nil => List.Nil
+      case List.::(head, tail) => f(head) match {
+        case List.Nil => tail.flatMap(f)
+        case List.::(head, _) => List.::(head, tail.flatMap(f))
+      }
+    }
+
+    def shoutString: List[String] = this.map(_.toString + "!")
+
 
     // def ::
+
 
     // map
 
     // flatMap
-
   }
 
-  object List{
+
+  object List {
     case class ::[A](head: A, tail: List[A]) extends List[A]
+
     case object Nil extends List[Nothing]
 
-    def apply[A](v: A*): List[A] =
-      if(v.isEmpty) List.Nil else ::(v.head, apply(v.tail:_*))
+    def apply[A](v: A*): List[A] = {
+      if (v.isEmpty) Nil else ::(v.head, apply(v.tail: _*))
+    }
   }
-
-
-
 
 
   /**
    * Метод cons, добавляет элемент в голову списка, для этого метода можно воспользоваться названием `::`
    *
    */
+
 
   /**
    * Метод mkString возвращает строковое представление списка, с учетом переданного разделителя
