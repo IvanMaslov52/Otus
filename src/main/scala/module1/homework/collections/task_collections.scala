@@ -2,17 +2,17 @@ package module1.homework.collections
 
 object task_collections {
   private val numbers = Map(
-  "0" -> "zero",
-  "1" -> "one",
-  "2" -> "two",
-  "3" -> "three",
-  "4" -> "four",
-  "5" -> "five",
-  "6" -> "six",
-  "7" -> "seven",
-  "8" -> "eight",
-  "9" -> "nine"
-)
+    "0" -> "zero",
+    "1" -> "one",
+    "2" -> "two",
+    "3" -> "three",
+    "4" -> "four",
+    "5" -> "five",
+    "6" -> "six",
+    "7" -> "seven",
+    "8" -> "eight",
+    "9" -> "nine"
+  )
 
 
   def isASCIIString(str: String): Boolean = str.matches("[A-Za-z]+")
@@ -52,6 +52,7 @@ object task_collections {
     }
     result
   }
+
   /**
    *
    * У нас есть два дилера со списками машин которые они обслуживают и продают (case class Auto(mark: String, model: String)).
