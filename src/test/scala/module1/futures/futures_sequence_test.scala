@@ -22,7 +22,7 @@ class futures_sequence_test extends AnyFlatSpec {
       }
     }
 
-    override def reportFailure(cause: Throwable): Unit = ???
+    override def reportFailure(cause: Throwable): Unit = println(" (\"Runnable limit reached, You can do better :)\")")
   }
 
   def await[A](future: Future[A]): A = Await.result(future, Duration.Inf)
@@ -39,7 +39,7 @@ class futures_sequence_test extends AnyFlatSpec {
       * satisfied answer will process task with any number of runnable
       * choose which one you want
       * */
-    val limit = 100
+    val limit = 12
 
     implicit val exec: ExecutionContext = limitedExec(limit)
     val fut1 = fut(1)
@@ -57,7 +57,7 @@ class futures_sequence_test extends AnyFlatSpec {
      * choose which one you want
      * */
 
-    val limit = 100
+    val limit = 12
 
     implicit val exec: ExecutionContext = limitedExec(limit)
     val ex1 = new Exception("ex1")
@@ -76,8 +76,7 @@ class futures_sequence_test extends AnyFlatSpec {
      * choose which one you want
      * */
 
-    val limit = 100
-
+    val limit = 10
     implicit val exec: ExecutionContext = limitedExec(limit)
     val ex1 = new Exception("ex1")
     val ex2 = new Exception("ex2")
